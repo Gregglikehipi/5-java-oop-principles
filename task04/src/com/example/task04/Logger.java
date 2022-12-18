@@ -1,16 +1,19 @@
-package com.example.task01;
+package com.example.task04;
+
+import sun.rmi.runtime.Log;
 
 import java.text.MessageFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 class Logger {
     private final String name;
     private importanceLevel level;
     private static HashMap<String,Logger> loggers = new HashMap<>();
+    private ArrayList<MessageHandler> mHadlers = new ArrayList<>();
 
     public Logger(String name) {
         this.name = name;
@@ -22,6 +25,12 @@ class Logger {
         this.name = name;
         this.level = level;
         loggers.put(name, this);
+    }
+
+    public Logger(String name, MessageHandler... messageHandlers) {
+        this.name = name;
+        this.level = importanceLevel.DEBUG;
+        mHadlers.addAll(Arrays.asList(messageHandlers));
     }
 
     public static Logger getLogger(String name) {
@@ -52,17 +61,22 @@ class Logger {
 
     public void printLog(importanceLevel level, String message) {
         if (level.ordinal() >= this.level.ordinal()) {
-            System.out.println(MessageFormat.format("[{0}] {1} {2} - {3}",
+            String logMessage = (MessageFormat.format("[{0}] {1} {2} - {3}",
                     level,
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd hh:mm:ss")),
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.mm.dd hh:mm:ss")),
                     this.name,
                     message));
+            for (MessageHandler handler : mHadlers) {
+                handler.log(logMessage);
+            }
         }
     }
 
     public void printLog(importanceLevel level, String template, Object... args) {
         if (level.ordinal() >= this.level.ordinal()) {
-            System.out.println(MessageFormat.format(template, args));
+            String logMessage = MessageFormat.format(template, args);
+            for (MessageHandler handler : mHadlers)
+                handler.log(logMessage);
         }
     }
 
